@@ -27,7 +27,7 @@ class Color:
 
 
 def create_ft(WIDTH: int, HEIGHT: int) -> list[tuple[int, int]]:
-    ft = []
+    ft: list[tuple[int, int]] = []
     x = floor(WIDTH / 2 - 3)
     y = ceil(HEIGHT / 2 - 3)
     ft += [(x, y)]
@@ -169,14 +169,27 @@ def maze_show(
     HEIGHT = 21
     WIDTH = 21
     ft = create_ft(WIDTH, HEIGHT)
-    for i in range(WIDTH):
+    fd_color = choice(Color.all_fd)
+    if fd_color == Color.FD_BLACK:
+        fd_color = Color.FD_GREEN
+    elif fd_color == Color.FD_GREEN:
+        fd_color = Color.FD_CYAN
+    elif fd_color == Color.FD_CYAN:
+        fd_color = Color.FD_RED
+    elif fd_color == Color.FD_RED:
+        fd_color = Color.FD_BROWN
+    elif fd_color == Color.FD_BROWN:
+        fd_color = Color.FD_BLUE
+    elif fd_color == Color.FD_BLUE:
+        fd_color = Color.FD_BLACK
+    for _ in range(WIDTH):
         print(f"{color}████", end="")
     print("██")
     for y in range(HEIGHT):
         print(f"{color}█", end="")
         for x in range(WIDTH):
             if (x, y) in ft:
-                print(f"█{Color.FD_BLUE}  {Color.FD_BLACK}█", end="")
+                print(f"█{fd_color}  {Color.FD_BLACK}█", end="")
             else:
                 west = ((cells[(x, y)][1] >> 3) & 1) == 0
                 east = ((cells[(x, y)][1] >> 1) & 1) == 0
@@ -212,6 +225,22 @@ def output(cells: dict[tuple[int, int], list[int]], WIDTH: int, HEIGHT: int) -> 
             f.write("\n")
 
 
+START = (1,1)
+END = (9,9)
+
+
+def solve_maze(cells: dict[tuple[int, int], list[int]]) -> list[tuple[int, int]]:
+    HEIGHT = 21
+    WIDTH = 21
+    directions = [
+        (1, 0, -1),   # NORTH
+        (2, 1, 0),    # EAST
+        (4, 0, 1),    # SOUTH
+        (8, -1, 0),   # WEST
+    ]
+
+
+
 PERFECT = True
 cells = maze_gen(PERFECT)
 output(cells, 21, 21)
@@ -224,7 +253,20 @@ while True:
         output(cells, 21, 21)
         maze_show(cells, color)
     elif inp == "2":
-        color = choice(Color.all)
+        if color == Color.WHITE:
+            color = Color.RED
+        elif color == Color.RED:
+            color = Color.BLUE
+        elif color == Color.BLUE:
+            color = Color.CYAN
+        elif color == Color.CYAN:
+            color = Color.GREEN
+        elif color == Color.GREEN:
+            color = Color.MAGENTA
+        elif color == Color.MAGENTA:
+            color = Color.BROWN
+        else:
+            color = Color.WHITE
         maze_show(cells, color)
     elif inp == "3":
         pass
@@ -240,7 +282,6 @@ while True:
         break
     else:
         print("\nERROR: Wrong input\n")
-
 # colors
 # cells = maze_gen()
 # random = choice(Color.all)
