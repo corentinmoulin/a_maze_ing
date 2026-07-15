@@ -169,19 +169,6 @@ def maze_show(
     HEIGHT = 21
     WIDTH = 21
     ft = create_ft(WIDTH, HEIGHT)
-    fd_color = choice(Color.all_fd)
-    if fd_color == Color.FD_BLACK:
-        fd_color = Color.FD_GREEN
-    elif fd_color == Color.FD_GREEN:
-        fd_color = Color.FD_CYAN
-    elif fd_color == Color.FD_CYAN:
-        fd_color = Color.FD_RED
-    elif fd_color == Color.FD_RED:
-        fd_color = Color.FD_BROWN
-    elif fd_color == Color.FD_BROWN:
-        fd_color = Color.FD_BLUE
-    elif fd_color == Color.FD_BLUE:
-        fd_color = Color.FD_BLACK
     for _ in range(WIDTH):
         print(f"{color}████", end="")
     print("██")
@@ -189,7 +176,7 @@ def maze_show(
         print(f"{color}█", end="")
         for x in range(WIDTH):
             if (x, y) in ft:
-                print(f"█{fd_color}  {Color.FD_BLACK}█", end="")
+                print(f"█{Color.FD_BLUE}  {Color.FD_BLACK}█", end="")
             else:
                 west = ((cells[(x, y)][1] >> 3) & 1) == 0
                 east = ((cells[(x, y)][1] >> 1) & 1) == 0
@@ -238,6 +225,47 @@ def solve_maze(cells: dict[tuple[int, int], list[int]]) -> list[tuple[int, int]]
         (4, 0, 1),    # SOUTH
         (8, -1, 0),   # WEST
     ]
+    ft_logo = create_ft(WIDTH, HEIGHT)
+    infection: list[tuple[int, int]] = [START]  # Toutes les coordonnees du labyrinthe
+    index_infection = 0  # index de toutes les coordonnees du labyrinthe
+    parents_children: dict[tuple[int, int], tuple[int, int] | None] = {}
+    parents_children[START] = None
+    voisin: tuple[int, int]
+
+    while index_infection < len(infection):
+        x, y = infection[index_infection]
+        index_infection += 1
+
+        if (x, y) == END:
+            break
+
+        current_walls = cells[x, y][1]
+
+        for wall, x_dir, y_dir in directions:
+            nw_x = x + x_dir
+            nw_y = y + y_dir
+
+            if current_walls & wall:
+                continue
+
+            if not (0 <= nw_x < WIDTH and 0 <= nw_y < HEIGHT):
+                continue
+
+            if nw_x in ft_logo or nw_y in ft_logo:
+                continue
+
+            voisin = (nw_x, nw_y)
+            parents_children[voisin] = (x, y)
+            infection.append(voisin)
+
+    path: list[tuple[int, int]] = []
+    current_position = END
+
+
+
+
+
+
 
 
 
@@ -256,8 +284,6 @@ while True:
         if color == Color.WHITE:
             color = Color.RED
         elif color == Color.RED:
-            color = Color.BLUE
-        elif color == Color.BLUE:
             color = Color.CYAN
         elif color == Color.CYAN:
             color = Color.GREEN
