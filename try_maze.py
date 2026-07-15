@@ -225,8 +225,8 @@ def output(cells: dict[tuple[int, int], list[int]], WIDTH: int, HEIGHT: int) -> 
             f.write("\n")
 
 
-START = (1,1)
-END = (9,9)
+START = (1, 1)
+END = (9, 9)
 
 
 def solve_maze(cells: dict[tuple[int, int], list[int]]) -> list[tuple[int, int]]:
