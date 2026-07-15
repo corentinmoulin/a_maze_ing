@@ -165,7 +165,10 @@ def maze_gen(PERFECT: bool) -> dict[tuple[int, int], list[int]]:
 def maze_show(
         cells: dict[tuple[int, int], list[int]],
         color: str,
+        path: list[tuple[int, int]] | None = None
         ) -> None:
+    if path is None:
+        path = []
     HEIGHT = 21
     WIDTH = 21
     ft = create_ft(WIDTH, HEIGHT)
@@ -177,6 +180,24 @@ def maze_show(
         for x in range(WIDTH):
             if (x, y) in ft:
                 print(f"█{Color.FD_BLUE}  {Color.FD_BLACK}█", end="")
+            elif (x, y) in path:
+                west = ((cells[(x, y)][1] >> 3) & 1) == 0
+                east = ((cells[(x, y)][1] >> 1) & 1) == 0
+                if west and (x - 1, y) in path:
+                    left = f"{Color.FD_GREEN} "
+                elif west:
+                    left = f"{Color.FD_BLACK} "
+                else:
+                    left = f"{color}█"
+
+                if east and (x + 1, y) in path:
+                    right = f"{Color.FD_GREEN} "
+                elif east:
+                    right = f"{Color.FD_BLACK} "
+                else:
+                    right = f"{color}█"
+
+                print(f"{left}{Color.FD_GREEN}  ​{right}{Color.RESET}{color}", end="")
             else:
                 west = ((cells[(x, y)][1] >> 3) & 1) == 0
                 east = ((cells[(x, y)][1] >> 1) & 1) == 0
@@ -187,7 +208,10 @@ def maze_show(
         print("█", end="")
         for x in range(WIDTH):
             if ((cells[(x, y)][1] >> 2) & 1) == 0:
-                print("█  ​█", end="")
+                if (x, y) in path and (x, y + 1) in path:
+                    print(f"█{Color.FD_GREEN}  ​█{Color.FD_BLACK}", end="")
+                else:
+                    print("█  ​█", end="")
             else:
                 print("████", end="")
         print(f"█{Color.RESET}")
@@ -212,8 +236,8 @@ def output(cells: dict[tuple[int, int], list[int]], WIDTH: int, HEIGHT: int) -> 
             f.write("\n")
 
 
-START = (1, 1)
-END = (9, 9)
+START = (0, 0)
+END = (20, 20)
 
 
 def solve_maze(cells: dict[tuple[int, int], list[int]]) -> list[tuple[int, int]]:
@@ -226,24 +250,29 @@ def solve_maze(cells: dict[tuple[int, int], list[int]]) -> list[tuple[int, int]]
         (8, -1, 0),   # WEST
     ]
     ft_logo = create_ft(WIDTH, HEIGHT)
-    infection: list[tuple[int, int]] = [START]  # Toutes les coordonnees du labyrinthe
-    index_infection = 0  # index de toutes les coordonnees du labyrinthe
+    to_visit: list[tuple[int, int]] = [START]  # Toutes les coordonnees du labyrinthe a visite prochainement
+    index_to_visit = 0  # index de toutes les coordonnees du labyrinthe a visite prochainement
     parents_children: dict[tuple[int, int], tuple[int, int] | None] = {}
     parents_children[START] = None
     voisin: tuple[int, int]
+    visited: set[tuple[int, int]] = {START}
 
-    while index_infection < len(infection):
-        x, y = infection[index_infection]
-        index_infection += 1
+    while index_to_visit < len(to_visit):
+        x, y = to_visit[index_to_visit]
+        index_to_visit += 1
 
         if (x, y) == END:
             break
 
         current_walls = cells[x, y][1]
-
         for wall, x_dir, y_dir in directions:
             nw_x = x + x_dir
             nw_y = y + y_dir
+
+            voisin = (nw_x, nw_y)
+
+            if voisin in visited:
+                continue
 
             if current_walls & wall:
                 continue
@@ -251,22 +280,20 @@ def solve_maze(cells: dict[tuple[int, int], list[int]]) -> list[tuple[int, int]]
             if not (0 <= nw_x < WIDTH and 0 <= nw_y < HEIGHT):
                 continue
 
-            if nw_x in ft_logo or nw_y in ft_logo:
+            if (nw_x, nw_y) in ft_logo:
                 continue
-
-            voisin = (nw_x, nw_y)
+            
+            visited.add(voisin)
             parents_children[voisin] = (x, y)
-            infection.append(voisin)
+            to_visit.append(voisin)
 
     path: list[tuple[int, int]] = []
-    current_position = END
-
-
-
-
-
-
-
+    current_position: tuple[int, int] | None = END
+    while current_position is not None:
+        path.append(current_position)
+        current_position = parents_children[current_position]
+    path.reverse()
+    return path
 
 
 PERFECT = True
@@ -274,36 +301,55 @@ cells = maze_gen(PERFECT)
 output(cells, 21, 21)
 color = Color.WHITE
 maze_show(cells, color)
+show_path: bool = False
 while True:
     inp = input("1: regen\n2: change color\n3: show/hide path\n0: quit\nYour choice:")
     if inp == "1":
-        cells = maze_gen(PERFECT)
-        output(cells, 21, 21)
-        maze_show(cells, color)
+        if show_path is True:
+            cells = maze_gen(PERFECT)
+            output(cells, 21, 21)
+            maze_show(cells, color, solve_maze(cells))
+        else:
+            cells = maze_gen(PERFECT)
+            output(cells, 21, 21)
+            maze_show(cells, color)
     elif inp == "2":
         if color == Color.WHITE:
             color = Color.RED
         elif color == Color.RED:
             color = Color.CYAN
         elif color == Color.CYAN:
-            color = Color.GREEN
-        elif color == Color.GREEN:
             color = Color.MAGENTA
         elif color == Color.MAGENTA:
             color = Color.BROWN
         else:
             color = Color.WHITE
-        maze_show(cells, color)
+        if show_path is True:
+            maze_show(cells, color, solve_maze(cells))
+        else:
+            maze_show(cells, color)
     elif inp == "3":
-        pass
+        if show_path is True:
+            show_path = False
+        else:
+            show_path = True
+        if show_path is True:
+            maze_show(cells, color, solve_maze(cells))
+        else:
+            maze_show(cells, color)
     elif inp == "4":
         if PERFECT is True:
             PERFECT = False
         else:
             PERFECT = True
-        cells = maze_gen(PERFECT)
-        output(cells, 21, 21)
-        maze_show(cells, color)
+        if show_path % 2 == 0:
+            cells = maze_gen(PERFECT)
+            output(cells, 21, 21)
+            maze_show(cells, color, solve_maze(cells))
+        else:
+            cells = maze_gen(PERFECT)
+            output(cells, 21, 21)
+            maze_show(cells, color)
     elif inp == "0":
         break
     else:
