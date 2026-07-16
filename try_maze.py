@@ -3,6 +3,13 @@ from math import ceil, floor
 import sys
 
 
+HEIGHT = 21
+WIDTH = 21
+START = (0, 0)
+END = (20, 20)
+PERFECT = True
+
+
 class Color:
     RESET = "\033[0m"
 
@@ -69,8 +76,6 @@ def create_ft(WIDTH: int, HEIGHT: int) -> list[tuple[int, int]]:
 
 
 def maze_gen(PERFECT: bool) -> dict[tuple[int, int], list[int]]:
-    HEIGHT = 21
-    WIDTH = 21
     ft = create_ft(HEIGHT, WIDTH)
     cells: dict[tuple[int, int], list[int]] = {}
     i = 1
@@ -169,8 +174,6 @@ def maze_show(
         ) -> None:
     if path is None:
         path = []
-    HEIGHT = 21
-    WIDTH = 21
     ft = create_ft(WIDTH, HEIGHT)
     for _ in range(WIDTH):
         print(f"{color}████", end="")
@@ -183,6 +186,7 @@ def maze_show(
             elif (x, y) in path:
                 west = ((cells[(x, y)][1] >> 3) & 1) == 0
                 east = ((cells[(x, y)][1] >> 1) & 1) == 0
+
                 if west and (x - 1, y) in path:
                     left = f"{Color.FD_GREEN} "
                 elif west:
@@ -197,7 +201,12 @@ def maze_show(
                 else:
                     right = f"{color}█"
 
-                print(f"{left}{Color.FD_GREEN}  ​{right}{Color.RESET}{color}", end="")
+                if (x, y) == START:
+                    print(f"{left}{Color.FD_BLUE}  ​{right}{Color.RESET}{color}", end="")
+                elif (x, y) == END:
+                    print(f"{left}{Color.FD_BROWN}  ​{right}{Color.RESET}{color}", end="")
+                else:
+                    print(f"{left}{Color.FD_GREEN}  ​{right}{Color.RESET}{color}", end="")
             else:
                 west = ((cells[(x, y)][1] >> 3) & 1) == 0
                 east = ((cells[(x, y)][1] >> 1) & 1) == 0
@@ -228,21 +237,35 @@ def to_hex(value: int) -> str:
     return result
 
 
-def output(cells: dict[tuple[int, int], list[int]], WIDTH: int, HEIGHT: int) -> None:
+def output(cells: dict[tuple[int, int], list[int]], path: list[tuple[int, int]]) -> None:
     with open('output.txt', 'w') as f:
         for y in range(HEIGHT):
             for x in range(WIDTH):
                 f.write(to_hex(cells[(x, y)][1]))
             f.write("\n")
-
-
-START = (0, 0)
-END = (20, 20)
+        f.write("\n")
+        f.write("\n")
+        f.write(str(START).strip("(").strip(")") + "\n")
+        f.write(str(END).strip("(").strip(")") + "\n")
+        directions = [
+        (0, -1),   # NORTH
+        (1, 0),    # EAST
+        (0, 1),    # SOUTH
+        (-1, 0),   # WEST
+        ]
+        for i in range(len(path) - 1):
+            if path[i + 1][0] == path[i][0] + directions[0][0] and path[i + 1][1] == path[i][1] + directions[0][1]:
+                f.write("N")
+            if path[i + 1][0] == path[i][0] + directions[1][0] and path[i + 1][1] == path[i][1] + directions[1][1]:
+                f.write("E")
+            if path[i + 1][0] == path[i][0] + directions[2][0] and path[i + 1][1] == path[i][1] + directions[2][1]:
+                f.write("S")
+            if path[i + 1][0] == path[i][0] + directions[3][0] and path[i + 1][1] == path[i][1] + directions[3][1]:
+                f.write("W")
+            
 
 
 def solve_maze(cells: dict[tuple[int, int], list[int]]) -> list[tuple[int, int]]:
-    HEIGHT = 21
-    WIDTH = 21
     directions = [
         (1, 0, -1),   # NORTH
         (2, 1, 0),    # EAST
@@ -296,9 +319,8 @@ def solve_maze(cells: dict[tuple[int, int], list[int]]) -> list[tuple[int, int]]
     return path
 
 
-PERFECT = True
 cells = maze_gen(PERFECT)
-output(cells, 21, 21)
+output(cells, solve_maze(cells))
 color = Color.WHITE
 maze_show(cells, color)
 show_path: bool = False
@@ -320,8 +342,6 @@ while True:
             color = Color.CYAN
         elif color == Color.CYAN:
             color = Color.MAGENTA
-        elif color == Color.MAGENTA:
-            color = Color.BROWN
         else:
             color = Color.WHITE
         if show_path is True:
@@ -342,7 +362,7 @@ while True:
             PERFECT = False
         else:
             PERFECT = True
-        if show_path % 2 == 0:
+        if show_path is True:
             cells = maze_gen(PERFECT)
             output(cells, 21, 21)
             maze_show(cells, color, solve_maze(cells))
