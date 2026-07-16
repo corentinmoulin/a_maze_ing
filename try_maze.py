@@ -32,8 +32,19 @@ def new_config():
             OUTPUT_FILE = str(values[i])
         if prefix[i] == "PERFECT":
             global PERFECT
-            PERFECT = bool(values[i])
-    
+            PERFECT = values[i].strip().lower() == "true"
+
+
+def verif_config():
+    if WIDTH < 9 or HEIGHT < 7:
+        raise ValueError("Le labyrinthe est trop petit.")
+
+    ft = create_ft()
+    if START in ft:
+        raise ValueError("L'entrée ne peut pas être dans le logo 42.")
+    if END in ft:
+        raise ValueError("La sortie ne peut pas être dans le logo 42.")
+
 
 class Color:
     RESET = "\033[0m"
@@ -344,6 +355,7 @@ def solve_maze(cells: dict[tuple[int, int], list[int]]) -> list[tuple[int, int]]
     return path
 
 new_config()
+verif_config()
 cells: dict[tuple[int, int], list[int]] = maze_gen()
 output(cells, solve_maze(cells))
 color = Color.WHITE
