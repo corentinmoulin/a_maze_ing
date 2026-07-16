@@ -3,12 +3,37 @@ from math import ceil, floor
 import sys
 
 
-HEIGHT = 21
-WIDTH = 21
-START = (0, 0)
-END = (20, 20)
-PERFECT = True
-
+def new_config():
+    prefix: list[str] = []
+    with open("config.txt", "r") as f:
+        values = f.read().split("\n")
+    for i in range(len(values)):
+        index_start = values[i].find("=") + 1
+        if index_start == -1:
+            continue
+        prefix += [values[i][:index_start - 1]]
+        values[i] = values[i][index_start:]
+        if prefix[i] == "WIDTH":
+            global WIDTH
+            WIDTH = int(values[i])
+        if prefix[i] == "HEIGHT":
+            global HEIGHT
+            HEIGHT = int(values[i])
+        if prefix[i] == "ENTRY":
+            x, y = values[i].split(",")
+            global START
+            START = (int(x), int(y))
+        if prefix[i] == "EXIT":
+            x, y = values[i].split(",")
+            global END
+            END = (int(x), int(y))
+        if prefix[i] == "OUTPUT_FILE":
+            global OUTPUT_FILE
+            OUTPUT_FILE = str(values[i])
+        if prefix[i] == "PERFECT":
+            global PERFECT
+            PERFECT = bool(values[i])
+    
 
 class Color:
     RESET = "\033[0m"
@@ -33,7 +58,7 @@ class Color:
     all_fd = [FD_BLACK, FD_BLUE, FD_CYAN, FD_GREEN, FD_MAGENTA, FD_RED, FD_BROWN]
 
 
-def create_ft(WIDTH: int, HEIGHT: int) -> list[tuple[int, int]]:
+def create_ft() -> list[tuple[int, int]]:
     ft: list[tuple[int, int]] = []
     x = floor(WIDTH / 2 - 3)
     y = ceil(HEIGHT / 2 - 3)
@@ -75,8 +100,8 @@ def create_ft(WIDTH: int, HEIGHT: int) -> list[tuple[int, int]]:
     return ft
 
 
-def maze_gen(PERFECT: bool) -> dict[tuple[int, int], list[int]]:
-    ft = create_ft(HEIGHT, WIDTH)
+def maze_gen() -> dict[tuple[int, int], list[int]]:
+    ft = create_ft()
     cells: dict[tuple[int, int], list[int]] = {}
     i = 1
     for x in range(0, WIDTH):
@@ -174,7 +199,7 @@ def maze_show(
         ) -> None:
     if path is None:
         path = []
-    ft = create_ft(WIDTH, HEIGHT)
+    ft = create_ft()
     for _ in range(WIDTH):
         print(f"{color}████", end="")
     print("██")
@@ -238,7 +263,7 @@ def to_hex(value: int) -> str:
 
 
 def output(cells: dict[tuple[int, int], list[int]], path: list[tuple[int, int]]) -> None:
-    with open('output.txt', 'w') as f:
+    with open(OUTPUT_FILE, 'w') as f:
         for y in range(HEIGHT):
             for x in range(WIDTH):
                 f.write(to_hex(cells[(x, y)][1]))
@@ -272,7 +297,7 @@ def solve_maze(cells: dict[tuple[int, int], list[int]]) -> list[tuple[int, int]]
         (4, 0, 1),    # SOUTH
         (8, -1, 0),   # WEST
     ]
-    ft_logo = create_ft(WIDTH, HEIGHT)
+    ft_logo = create_ft()
     to_visit: list[tuple[int, int]] = [START]  # Toutes les coordonnees du labyrinthe a visite prochainement
     index_to_visit = 0  # index de toutes les coordonnees du labyrinthe a visite prochainement
     parents_children: dict[tuple[int, int], tuple[int, int] | None] = {}
@@ -318,8 +343,8 @@ def solve_maze(cells: dict[tuple[int, int], list[int]]) -> list[tuple[int, int]]
     path.reverse()
     return path
 
-
-cells = maze_gen(PERFECT)
+new_config()
+cells: dict[tuple[int, int], list[int]] = maze_gen()
 output(cells, solve_maze(cells))
 color = Color.WHITE
 maze_show(cells, color)
@@ -328,12 +353,12 @@ while True:
     inp = input("1: regen\n2: change color\n3: show/hide path\n0: quit\nYour choice:")
     if inp == "1":
         if show_path is True:
-            cells = maze_gen(PERFECT)
-            output(cells, 21, 21)
+            cells = maze_gen()
+            output(cells, solve_maze(cells))
             maze_show(cells, color, solve_maze(cells))
         else:
-            cells = maze_gen(PERFECT)
-            output(cells, 21, 21)
+            cells = maze_gen()
+            output(cells, solve_maze(cells))
             maze_show(cells, color)
     elif inp == "2":
         if color == Color.WHITE:
@@ -344,6 +369,7 @@ while True:
             color = Color.MAGENTA
         else:
             color = Color.WHITE
+
         if show_path is True:
             maze_show(cells, color, solve_maze(cells))
         else:
@@ -363,12 +389,12 @@ while True:
         else:
             PERFECT = True
         if show_path is True:
-            cells = maze_gen(PERFECT)
-            output(cells, 21, 21)
+            cells = maze_gen()
+            output(cells, solve_maze(cells))
             maze_show(cells, color, solve_maze(cells))
         else:
-            cells = maze_gen(PERFECT)
-            output(cells, 21, 21)
+            cells = maze_gen()
+            output(cells, solve_maze(cells))
             maze_show(cells, color)
     elif inp == "0":
         break
