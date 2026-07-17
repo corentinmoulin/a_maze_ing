@@ -1,9 +1,15 @@
 from random import randint, choice
 from math import ceil, floor
-import sys
+
+WIDTH: int = 11
+HEIGHT: int = 11
+START: tuple[int, int] = (0, 0)
+END: tuple[int, int] = (0, 0)
+OUTPUT_FILE: str = "output_maze.txt"
+PERFECT: bool = True
 
 
-def new_config():
+def new_config() -> None:
     prefix: list[str] = []
     with open("config.txt", "r") as f:
         values = f.read().split("\n")
@@ -35,9 +41,9 @@ def new_config():
             PERFECT = values[i].strip().lower() == "true"
 
 
-def verif_config():
-    if WIDTH < 9 or HEIGHT < 7:
-        raise ValueError("Le labyrinthe est trop petit.")
+def verif_config() -> None:
+    # if WIDTH < 9 or HEIGHT < 7:
+    #     raise ValueError("Le labyrinthe est trop petit.")
 
     ft = create_ft()
     if START in ft:
@@ -66,48 +72,26 @@ class Color:
     FD_CYAN = "\033[46m"
     FD_WHITE = "\033[47m"
     all = [RED, GREEN, BROWN, BLUE, MAGENTA, CYAN, WHITE]
-    all_fd = [FD_BLACK, FD_BLUE, FD_CYAN, FD_GREEN, FD_MAGENTA, FD_RED, FD_BROWN]
+    all_fd = [
+        FD_BLACK, FD_BLUE, FD_CYAN, FD_GREEN, FD_MAGENTA, FD_RED, FD_BROWN]
 
 
 def create_ft() -> list[tuple[int, int]]:
     ft: list[tuple[int, int]] = []
+    if WIDTH < 9 or HEIGHT < 7:
+        return ft
     x = floor(WIDTH / 2 - 3)
     y = ceil(HEIGHT / 2 - 3)
-    ft += [(x, y)]
-    y += 1
-    ft += [(x, y)]
-    y += 1
-    ft += [(x, y)]
-    x += 1
-    ft += [(x, y)]
-    x += 1
-    ft += [(x, y)]
-    y += 1
-    ft += [(x, y)]
-    y += 1
-    ft += [(x, y)]
-    x += 4
-    ft += [(x, y)]
-    x -= 1
-    ft += [(x, y)]
-    x -= 1
-    ft += [(x, y)]
-    y -= 1
-    ft += [(x, y)]
-    y -= 1
-    ft += [(x, y)]
-    x += 1
-    ft += [(x, y)]
-    x += 1
-    ft += [(x, y)]
-    y -= 1
-    ft += [(x, y)]
-    y -= 1
-    ft += [(x, y)]
-    x -= 1
-    ft += [(x, y)]
-    x -= 1
-    ft += [(x, y)]
+    moves = [
+        (0, 0), (0, 1), (0, 1), (1, 0), (1, 0),
+        (0, 1), (0, 1), (4, 0), (-1, 0), (-1, 0),
+        (0, -1), (0, -1), (1, 0), (1, 0), (0, -1), (0, -1),
+        (-1, 0), (-1, 0),
+    ]
+    for dx, dy in moves:
+        x += dx
+        y += dy
+        ft.append((x, y))
     return ft
 
 
@@ -129,7 +113,8 @@ def maze_gen() -> dict[tuple[int, int], list[int]]:
             while check != 1 and len(possibility) != 0:
                 z = choice(possibility)
                 if z == 1 and x > 0:  # west
-                    if cells[(x, y)][0] != cells[(x - 1, y)][0] and (x - 1, y) not in ft:
+                    if cells[(x, y)][0] != cells[(x - 1, y)][0] and (
+                            x - 1, y) not in ft:
                         cells[(x, y)][1] = cells[(x, y)][1] - 8
                         cells[(x - 1, y)][1] = cells[(x - 1, y)][1] - 2
                         check = 1
@@ -141,7 +126,8 @@ def maze_gen() -> dict[tuple[int, int], list[int]]:
                             if cells[k][0] == to_change:
                                 cells[k][0] = reg
                 if z == 2 and y < HEIGHT - 1:  # south
-                    if cells[(x, y)][0] != cells[(x, y + 1)][0] and (x, y + 1) not in ft:
+                    if cells[(x, y)][0] != cells[(x, y + 1)][0] and (
+                            x, y + 1) not in ft:
                         cells[(x, y)][1] = cells[(x, y)][1] - 4
                         cells[(x, y + 1)][1] = cells[(x, y + 1)][1] - 1
                         check = 1
@@ -153,7 +139,8 @@ def maze_gen() -> dict[tuple[int, int], list[int]]:
                             if cells[k][0] == to_change:
                                 cells[k][0] = reg
                 if z == 3 and x < WIDTH - 1:  # east
-                    if cells[(x, y)][0] != cells[(x + 1, y)][0] and (x + 1, y) not in ft:
+                    if cells[(x, y)][0] != cells[(x + 1, y)][0] and (
+                            x + 1, y) not in ft:
                         cells[(x, y)][1] = cells[(x, y)][1] - 2
                         cells[(x + 1, y)][1] = cells[(x + 1, y)][1] - 8
                         check = 1
@@ -165,7 +152,8 @@ def maze_gen() -> dict[tuple[int, int], list[int]]:
                             if cells[k][0] == to_change:
                                 cells[k][0] = reg
                 if z == 4 and y > 0:  # north
-                    if cells[(x, y)][0] != cells[(x, y - 1)][0] and (x, y - 1) not in ft:
+                    if cells[(x, y)][0] != cells[(x, y - 1)][0] and (
+                            x, y - 1) not in ft:
                         cells[(x, y)][1] = cells[(x, y)][1] - 1
                         cells[(x, y - 1)][1] = cells[(x, y - 1)][1] - 4
                         check = 1
@@ -179,27 +167,39 @@ def maze_gen() -> dict[tuple[int, int], list[int]]:
                 possibility.remove(z)
         else:
             cells[(x, y)][0] = 1
-    if PERFECT is False:
-        deadend_check = [7, 11, 13, 14]
-        for x in range(0, WIDTH):
-            for y in range(0, HEIGHT):
-                if cells[(x, y)][1] in deadend_check and (x, y) not in ft:
-                    possibility = [1, 2, 3, 4]
-                    while cells[(x, y)][1] in deadend_check and len(possibility) != 0:
-                        z = choice(possibility)
-                        if z == 1 and x > 0 and cells[(x, y)][1] != 7 and (x - 1, y) not in ft:  # west
-                            cells[(x, y)][1] = cells[(x, y)][1] - 8
-                            cells[(x - 1, y)][1] = cells[(x - 1, y)][1] - 2
-                        if z == 2 and y < HEIGHT - 1 and cells[(x, y)][1] != 11 and (x, y + 1) not in ft:  # south
-                            cells[(x, y)][1] = cells[(x, y)][1] - 4
-                            cells[(x, y + 1)][1] = cells[(x, y + 1)][1] - 1
-                        if z == 3 and x < WIDTH - 1 and cells[(x, y)][1] != 13 and (x + 1, y) not in ft:  # east
-                            cells[(x, y)][1] = cells[(x, y)][1] - 2
-                            cells[(x + 1, y)][1] = cells[(x + 1, y)][1] - 8
-                        if z == 4 and y > 0 and cells[(x, y)][1] != 14 and (x, y - 1) not in ft:  # north
-                            cells[(x, y)][1] = cells[(x, y)][1] - 1
-                            cells[(x, y - 1)][1] = cells[(x, y - 1)][1] - 4
-                        possibility.remove(z)
+    return cells
+
+
+def imperfect_gen(
+        cells: dict[tuple[int, int], list[int]]
+        ) -> dict[tuple[int, int], list[int]]:
+    # if PERFECT is False:
+    ft = create_ft()
+    deadend_check = [7, 11, 13, 14]
+    for x in range(0, WIDTH):
+        for y in range(0, HEIGHT):
+            if cells[(x, y)][1] in deadend_check and (x, y) not in ft:
+                possibility = [1, 2, 3, 4]
+                while cells[(x, y)][1] in deadend_check and len(
+                        possibility) != 0:
+                    z = choice(possibility)
+                    if z == 1 and x > 0 and cells[(x, y)][1] != 7 and (
+                            x - 1, y) not in ft:  # west
+                        cells[(x, y)][1] = cells[(x, y)][1] - 8
+                        cells[(x - 1, y)][1] = cells[(x - 1, y)][1] - 2
+                    if z == 2 and y < HEIGHT - 1 and cells[(
+                            x, y)][1] != 11 and (x, y + 1) not in ft:  # south
+                        cells[(x, y)][1] = cells[(x, y)][1] - 4
+                        cells[(x, y + 1)][1] = cells[(x, y + 1)][1] - 1
+                    if z == 3 and x < WIDTH - 1 and cells[(
+                            x, y)][1] != 13 and (x + 1, y) not in ft:  # east
+                        cells[(x, y)][1] = cells[(x, y)][1] - 2
+                        cells[(x + 1, y)][1] = cells[(x + 1, y)][1] - 8
+                    if z == 4 and y > 0 and cells[(x, y)][1] != 14 and (
+                            x, y - 1) not in ft:  # north
+                        cells[(x, y)][1] = cells[(x, y)][1] - 1
+                        cells[(x, y - 1)][1] = cells[(x, y - 1)][1] - 4
+                    possibility.remove(z)
     return cells
 
 
@@ -210,6 +210,8 @@ def maze_show(
         ) -> None:
     if path is None:
         path = []
+    if WIDTH < 9 or HEIGHT < 7:
+        print("Too small to print 42 !!")
     ft = create_ft()
     for _ in range(WIDTH):
         print(f"{color}████", end="")
@@ -238,11 +240,14 @@ def maze_show(
                     right = f"{color}█"
 
                 if (x, y) == START:
-                    print(f"{left}{Color.FD_BLUE}  ​{right}{Color.RESET}{color}", end="")
+                    print(f"{left}{
+                        Color.FD_BLUE}  ​{right}{Color.RESET}{color}", end="")
                 elif (x, y) == END:
-                    print(f"{left}{Color.FD_BROWN}  ​{right}{Color.RESET}{color}", end="")
+                    print(f"{left}{
+                        Color.FD_BROWN}  ​{right}{Color.RESET}{color}", end="")
                 else:
-                    print(f"{left}{Color.FD_GREEN}  ​{right}{Color.RESET}{color}", end="")
+                    print(f"{left}{
+                        Color.FD_GREEN}  ​{right}{Color.RESET}{color}", end="")
             else:
                 west = ((cells[(x, y)][1] >> 3) & 1) == 0
                 east = ((cells[(x, y)][1] >> 1) & 1) == 0
@@ -273,7 +278,10 @@ def to_hex(value: int) -> str:
     return result
 
 
-def output(cells: dict[tuple[int, int], list[int]], path: list[tuple[int, int]]) -> None:
+def output(
+        cells: dict[tuple[int, int], list[int]],
+        path: list[tuple[int, int]]
+        ) -> None:
     with open(OUTPUT_FILE, 'w') as f:
         for y in range(HEIGHT):
             for x in range(WIDTH):
@@ -284,24 +292,29 @@ def output(cells: dict[tuple[int, int], list[int]], path: list[tuple[int, int]])
         f.write(str(START).strip("(").strip(")") + "\n")
         f.write(str(END).strip("(").strip(")") + "\n")
         directions = [
-        (0, -1),   # NORTH
-        (1, 0),    # EAST
-        (0, 1),    # SOUTH
-        (-1, 0),   # WEST
+            (0, -1),   # NORTH
+            (1, 0),    # EAST
+            (0, 1),    # SOUTH
+            (-1, 0),   # WEST
         ]
         for i in range(len(path) - 1):
-            if path[i + 1][0] == path[i][0] + directions[0][0] and path[i + 1][1] == path[i][1] + directions[0][1]:
+            if path[i + 1][0] == path[i][0] + directions[0][0] \
+                    and path[i + 1][1] == path[i][1] + directions[0][1]:
                 f.write("N")
-            if path[i + 1][0] == path[i][0] + directions[1][0] and path[i + 1][1] == path[i][1] + directions[1][1]:
+            if path[i + 1][0] == path[i][0] + directions[1][0] \
+                    and path[i + 1][1] == path[i][1] + directions[1][1]:
                 f.write("E")
-            if path[i + 1][0] == path[i][0] + directions[2][0] and path[i + 1][1] == path[i][1] + directions[2][1]:
+            if path[i + 1][0] == path[i][0] + directions[2][0] \
+                    and path[i + 1][1] == path[i][1] + directions[2][1]:
                 f.write("S")
-            if path[i + 1][0] == path[i][0] + directions[3][0] and path[i + 1][1] == path[i][1] + directions[3][1]:
+            if path[i + 1][0] == path[i][0] + directions[3][0] \
+                    and path[i + 1][1] == path[i][1] + directions[3][1]:
                 f.write("W")
-            
 
 
-def solve_maze(cells: dict[tuple[int, int], list[int]]) -> list[tuple[int, int]]:
+def solve_maze(
+        cells: dict[tuple[int, int], list[int]]
+        ) -> list[tuple[int, int]]:
     directions = [
         (1, 0, -1),   # NORTH
         (2, 1, 0),    # EAST
@@ -309,8 +322,8 @@ def solve_maze(cells: dict[tuple[int, int], list[int]]) -> list[tuple[int, int]]
         (8, -1, 0),   # WEST
     ]
     ft_logo = create_ft()
-    to_visit: list[tuple[int, int]] = [START]  # Toutes les coordonnees du labyrinthe a visite prochainement
-    index_to_visit = 0  # index de toutes les coordonnees du labyrinthe a visite prochainement
+    to_visit: list[tuple[int, int]] = [START]
+    index_to_visit = 0
     parents_children: dict[tuple[int, int], tuple[int, int] | None] = {}
     parents_children[START] = None
     voisin: tuple[int, int]
@@ -341,7 +354,7 @@ def solve_maze(cells: dict[tuple[int, int], list[int]]) -> list[tuple[int, int]]
 
             if (nw_x, nw_y) in ft_logo:
                 continue
-            
+
             visited.add(voisin)
             parents_children[voisin] = (x, y)
             to_visit.append(voisin)
@@ -354,6 +367,7 @@ def solve_maze(cells: dict[tuple[int, int], list[int]]) -> list[tuple[int, int]]
     path.reverse()
     return path
 
+
 new_config()
 verif_config()
 cells: dict[tuple[int, int], list[int]] = maze_gen()
@@ -362,14 +376,19 @@ color = Color.WHITE
 maze_show(cells, color)
 show_path: bool = False
 while True:
-    inp = input("1: regen\n2: change color\n3: show/hide path\n0: quit\nYour choice:")
+    inp = input("1: regen\n2: change color\n3: show/hide path\n"
+                + "4: perfect/imperfect\n0: quit\nYour choice:")
     if inp == "1":
         if show_path is True:
             cells = maze_gen()
+            if PERFECT is False:
+                cells = imperfect_gen(cells)
             output(cells, solve_maze(cells))
             maze_show(cells, color, solve_maze(cells))
         else:
             cells = maze_gen()
+            if PERFECT is False:
+                cells = imperfect_gen(cells)
             output(cells, solve_maze(cells))
             maze_show(cells, color)
     elif inp == "2":
@@ -402,39 +421,17 @@ while True:
             PERFECT = True
         if show_path is True:
             cells = maze_gen()
+            if PERFECT is False:
+                cells = imperfect_gen(cells)
             output(cells, solve_maze(cells))
             maze_show(cells, color, solve_maze(cells))
         else:
             cells = maze_gen()
+            if PERFECT is False:
+                cells = imperfect_gen(cells)
             output(cells, solve_maze(cells))
             maze_show(cells, color)
     elif inp == "0":
         break
     else:
         print("\nERROR: Wrong input\n")
-# colors
-# cells = maze_gen()
-# random = choice(Color.all)
-# Color.all.remove(random)
-# random2 = choice(Color.all)
-# WIDTH = 10
-# HEIGHT = 10
-# for i in range(WIDTH):
-#     print(f"{random}████", end="")
-# print("██")
-# for y in range(HEIGHT):
-#     print("█", end="")
-#     for x in range(WIDTH):
-#         west = ((cells[(x, y)][1] >> 3) & 1) == 0
-#         east = ((cells[(x, y)][1] >> 1) & 1) == 0
-#         left = f"{random2}█" if west else f"{random}█"
-#         right = f"{random2}█" if east else f"{random}█"
-#         print(f"{left}{random2}██{right}", end="")
-#     print("█")
-#     print("█", end="")
-#     for x in range(WIDTH):
-#         if ((cells[(x, y)][1] >> 2) & 1) == 0:
-#             print(f"█{random2}██{random}█", end="")
-#         else:
-#             print("████", end="")
-#     print("█")
