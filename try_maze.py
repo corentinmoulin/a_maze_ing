@@ -1,5 +1,6 @@
 from random import randint, choice
 from math import ceil, floor
+import sys
 
 WIDTH: int = 11
 HEIGHT: int = 11
@@ -10,40 +11,78 @@ PERFECT: bool = True
 
 
 def new_config() -> None:
-    prefix: list[str] = []
-    with open("config.txt", "r") as f:
+    prefix: str = ""
+    seen: set[str] = set()
+    mandatory = {
+        "WIDTH",
+        "HEIGHT",
+        "ENTRY",
+        "EXIT",
+        "OUTPUT_FILE",
+        "PERFECT",
+    }
+    if len(sys.argv) < 2:
+        raise ValueError()
+    else:
+        extention_name = sys.argv[1].split('.')
+        if len(extention_name) != 2:
+            raise ValueError()
+        else:
+            if extention_name[1] != "txt":
+                raise ValueError()
+            else:
+                name_file = sys.argv[1]
+                
+    with open(name_file, "r") as f:
         values = f.read().split("\n")
     for i in range(len(values)):
         index_start = values[i].find("=") + 1
         if index_start == -1:
             continue
-        prefix += [values[i][:index_start - 1]]
+        prefix = values[i][:index_start - 1]
         values[i] = values[i][index_start:]
-        if prefix[i] == "WIDTH":
+        if prefix in seen:
+            raise ValueError()
+        if prefix == "WIDTH":
             global WIDTH
             WIDTH = int(values[i])
-        if prefix[i] == "HEIGHT":
+            seen.add(prefix)
+        if prefix == "HEIGHT":
             global HEIGHT
             HEIGHT = int(values[i])
-        if prefix[i] == "ENTRY":
+            seen.add(prefix)
+        if prefix == "ENTRY":
             x, y = values[i].split(",")
             global START
             START = (int(x), int(y))
-        if prefix[i] == "EXIT":
+            seen.add(prefix)
+        if prefix == "EXIT":
             x, y = values[i].split(",")
             global END
             END = (int(x), int(y))
-        if prefix[i] == "OUTPUT_FILE":
+            seen.add(prefix)
+        if prefix == "OUTPUT_FILE":
             global OUTPUT_FILE
             OUTPUT_FILE = str(values[i])
-        if prefix[i] == "PERFECT":
+            seen.add(prefix)
+        if prefix == "PERFECT":
             global PERFECT
             PERFECT = values[i].strip().lower() == "true"
+            seen.add(prefix)
+        if prefix == "SEED":
+            global SEED
+            SEED = int(values[i])
+            seen.add(prefix)
+    missing = mandatory - seen
+    if missing:
+        raise ValueError()
 
 
 def verif_config() -> None:
-    # if WIDTH < 9 or HEIGHT < 7:
-    #     raise ValueError("Le labyrinthe est trop petit.")
+    if WIDTH < 9 or HEIGHT < 7:
+        raise ValueError("Le labyrinthe est trop petit.")
+    if START == END:
+        raise ValueError("L'entrée et la sortie doivent etre differentes.")
 
     ft = create_ft()
     if START in ft:
