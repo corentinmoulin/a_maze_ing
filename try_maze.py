@@ -12,6 +12,7 @@ PERFECT: bool = True
 
 def new_config() -> None:
     prefix: str = ""
+    name_file = ""
     seen: set[str] = set()
     mandatory = {
         "WIDTH",
@@ -21,17 +22,20 @@ def new_config() -> None:
         "OUTPUT_FILE",
         "PERFECT",
     }
-    if len(sys.argv) < 2:
-        raise ValueError()
+    if 3 < len(sys.argv) < 1:
+        raise ValueError("Trop ou trop peu d'arguments")
     else:
-        extention_name = sys.argv[1].split('.')
-        if len(extention_name) != 2:
-            raise ValueError()
-        else:
-            if extention_name[1] != "txt":
-                raise ValueError()
+        for i in range(len(sys.argv)):
+            extention_name = sys.argv[i].split('.')
+            if len(extention_name) != 2:
+                continue
             else:
-                name_file = sys.argv[1]
+                if extention_name[1] != "txt":
+                    continue
+                else:
+                    name_file = sys.argv[i]
+        if name_file == "":
+            raise ValueError("pas le bon format de fichier")
                 
     with open(name_file, "r") as f:
         values = f.read().split("\n")
