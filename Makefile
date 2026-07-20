@@ -4,7 +4,7 @@ install:
 	pip install -r requirements.txt
 
 run:
-	python3 try_maze.py
+	python3 try_maze.py config.txt
 
 debug:
 	python3 -m pdb try_maze.py
@@ -12,7 +12,7 @@ debug:
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type d -name ".mypy_cache" -exec rm -rf {} +
-	find . -type f -name "output_maze.txt" -exec rm -rf {} +
+	find . -type f -name "maze.txt" -exec rm -rf {} +
 
 lint:
 	flake8

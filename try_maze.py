@@ -6,8 +6,9 @@ WIDTH: int = 11
 HEIGHT: int = 11
 START: tuple[int, int] = (0, 0)
 END: tuple[int, int] = (0, 0)
-OUTPUT_FILE: str = "output_maze.txt"
+OUTPUT_FILE: str = "maze.txt"
 PERFECT: bool = True
+SEED = 4
 
 
 def new_config() -> None:
@@ -22,7 +23,7 @@ def new_config() -> None:
         "OUTPUT_FILE",
         "PERFECT",
     }
-    if 3 < len(sys.argv) < 1:
+    if len(sys.argv) != 2:
         raise ValueError("Trop ou trop peu d'arguments")
     else:
         for i in range(len(sys.argv)):
@@ -36,10 +37,12 @@ def new_config() -> None:
                     name_file = sys.argv[i]
         if name_file == "":
             raise ValueError("pas le bon format de fichier")
-                
+
     with open(name_file, "r") as f:
         values = f.read().split("\n")
     for i in range(len(values)):
+        if values[i].strip()[0] == "#":
+            continue
         index_start = values[i].find("=") + 1
         if index_start == -1:
             continue
@@ -59,11 +62,22 @@ def new_config() -> None:
             x, y = values[i].split(",")
             global START
             START = (int(x), int(y))
+            if START[0] >= WIDTH \
+                or START[1] >= HEIGHT \
+                or START[0] < 0 \
+               or START[1] < 0:
+                raise ValueError(
+                    "Les coordonnee d'entree doivent etre dans le labyrinthe"
+                    )
             seen.add(prefix)
         if prefix == "EXIT":
             x, y = values[i].split(",")
             global END
             END = (int(x), int(y))
+            if END[0] >= WIDTH or END[1] >= HEIGHT or END[0] < 0 or END[1] < 0:
+                raise ValueError(
+                    "Les coordonnee de sortie doivent etre dans le labyrinthe"
+                    )
             seen.add(prefix)
         if prefix == "OUTPUT_FILE":
             global OUTPUT_FILE
@@ -79,12 +93,14 @@ def new_config() -> None:
             seen.add(prefix)
     missing = mandatory - seen
     if missing:
-        raise ValueError()
+        raise ValueError("All mandatory part are not in the config file")
 
 
 def verif_config() -> None:
-    if WIDTH < 9 or HEIGHT < 7:
-        raise ValueError("Le labyrinthe est trop petit.")
+    if WIDTH < 1 or HEIGHT < 1:
+        raise ValueError(
+            "La largeur et la hauteur doivent etre superieur a 0."
+                         )
     if START == END:
         raise ValueError("L'entrée et la sortie doivent etre differentes.")
 
@@ -411,9 +427,15 @@ def solve_maze(
     return path
 
 
-new_config()
-verif_config()
+try:
+    new_config()
+    verif_config()
+except Exception as e:
+    print(e)
+    exit()
 cells: dict[tuple[int, int], list[int]] = maze_gen()
+if PERFECT is False:
+    imperfect_gen(cells)
 output(cells, solve_maze(cells))
 color = Color.WHITE
 maze_show(cells, color)
