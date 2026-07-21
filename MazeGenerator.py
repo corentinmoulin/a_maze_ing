@@ -586,12 +586,13 @@ class MazeGenerator:
             for x in range(self.WIDTH):
                 if ((cells[(x, y)][1] >> 2) & 1) == 0:
                     if (x, y) in path and (x, y + 1) in path:
-                        print(f"█{Color.FD_GREEN}  ​█{Color.RESET}", end="")
+                        print(f"{color}█{Color.FD_GREEN}  ​█{Color.RESET}",
+                              end="")
                     else:
                         print(f"{color}█  ​█", end="")
                 else:
                     print(f"{color}████", end="")
-            print(f"█{Color.RESET}")
+            print(f"{color}█{Color.RESET}")
 
     def main(self) -> dict[tuple[int, int], list[int]]:
         """Generate the maze from the loaded configuration.
