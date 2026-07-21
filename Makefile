@@ -4,7 +4,7 @@ install:
 	pip install -r requirements.txt
 
 run:
-	python3 try_maze.py config.txt
+	python3 MazeGenerator.py config.txt
 
 debug:
 	python3 -m pdb try_maze.py
