@@ -49,7 +49,7 @@ cells = maze.main()
 color = Color.WHITE
 maze.maze_show(cells, color)
 '''
-from random import randint, choice
+from random import randint, choice, seed
 from math import ceil, floor
 import sys
 
@@ -89,7 +89,7 @@ class MazeGenerator:
         self.END: tuple[int, int] = (0, 0)
         self.OUTPUT_FILE: str = "maze.txt"
         self.PERFECT: bool = True
-        self.SEED = 4
+        self.SEED = None
 
     @staticmethod
     def to_hex(value: int) -> str:
@@ -280,6 +280,7 @@ class MazeGenerator:
             A dictionary mapping each cell coordinate to a list containing
             its group identifier and its wall value.
         """
+        seed(self.SEED)
         ft = self.create_ft()
         cells: dict[tuple[int, int], list[int]] = {}
         i = 1
